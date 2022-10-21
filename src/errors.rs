@@ -1,5 +1,9 @@
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
-use serde::Serialize;
+use actix_web::{
+    error::{self, InternalError, JsonPayloadError},
+    http::StatusCode,
+    HttpResponse, ResponseError,
+};
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 #[derive(Debug)]
@@ -7,8 +11,8 @@ pub enum AppErrorType {
     DieselResultError,
     DieselR2d2Error,
     ActixWebBlockingError,
+    ValidationError,
     //NotFoundError, (404)
-    //ValidationError, (400)
     //UnauthorizedError, (401)
     //TooManyRequestsError, (429)
 }
@@ -50,6 +54,36 @@ impl From<actix_web::error::BlockingError> for AppError {
     }
 }
 
+impl From<validator::ValidationErrors> for AppError {
+    fn from(err: validator::ValidationErrors) -> Self {
+        AppError {
+            code: "400".to_string(),
+            message: err.to_string(),
+            error: AppErrorType::ValidationError,
+        }
+    }
+}
+
+impl From<uuid::Error> for AppError {
+    fn from(_: uuid::Error) -> Self {
+        AppError {
+            code: "400".to_string(),
+            message: "Invalid UUID".to_string(),
+            error: AppErrorType::ValidationError,
+        }
+    }
+}
+
+impl From<&actix_web::error::JsonPayloadError> for AppError {
+    fn from(_: &actix_web::error::JsonPayloadError) -> Self {
+        AppError {
+            code: "400".to_string(),
+            message: "Invalid JSON payload".to_string(),
+            error: AppErrorType::ValidationError,
+        }
+    }
+}
+
 impl Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
@@ -62,21 +96,33 @@ impl ResponseError for AppError {
             AppErrorType::DieselResultError => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::DieselR2d2Error => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::ActixWebBlockingError => StatusCode::INTERNAL_SERVER_ERROR,
+            AppErrorType::ValidationError => StatusCode::BAD_REQUEST,
         }
     }
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_web::body::BoxBody> {
         HttpResponse::build(self.status_code()).json(AppErrorResponse {
-            code: self.code.as_str(),
-            message: self.message.as_str(),
+            code: self.code.clone(),
+            message: self.message.clone(),
         })
     }
 }
 
-#[derive(Debug, Serialize)]
-pub struct AppErrorResponse<'a> {
-    pub code: &'a str,
-    pub message: &'a str,
+impl AppError {
+    pub fn json_default_err_handler(err: JsonPayloadError) -> InternalError<JsonPayloadError> {
+        let app_err = AppError::from(&err);
+        error::InternalError::from_response(
+            err,
+            HttpResponse::build(app_err.status_code()).json(AppErrorResponse {
+                code: app_err.code.clone(),
+                message: app_err.message.clone(),
+            }),
+        )
+    }
 }
 
-// TODO: Unit tests
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AppErrorResponse {
+    pub code: String,
+    pub message: String,
+}

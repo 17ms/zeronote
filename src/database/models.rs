@@ -7,6 +7,8 @@ use actix_web::web;
 use chrono::{Local, NaiveDateTime};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+use validator::{Validate, ValidationError};
 
 // Insertables and ORM models for Diesel
 
@@ -32,6 +34,7 @@ impl Task {
     pub fn get_all(pool: web::Data<Pool>) -> Result<Vec<Self>, AppError> {
         let mut conn = pool.get()?;
         let tasks_vec = tasks.load::<Task>(&mut conn)?;
+        // TODO: use belonging_to(user) once user auth is in use
 
         Ok(tasks_vec)
     }
@@ -55,7 +58,7 @@ impl Task {
     pub fn update(pool: web::Data<Pool>, task: UpdateTask) -> Result<Self, AppError> {
         let mut conn = pool.get()?;
         let res = diesel::update(tasks::table)
-            .filter(tasks::id.eq(task.id))
+            .filter(tasks::id.eq(Uuid::parse_str(task.id.as_str())?))
             .set((
                 tasks::title.eq(task.title),
                 tasks::body.eq(task.body),
@@ -66,29 +69,60 @@ impl Task {
         Ok(res)
     }
 
-    pub fn delete(pool: web::Data<Pool>, task_uuid: uuid::Uuid) -> Result<usize, AppError> {
+    pub fn delete(pool: web::Data<Pool>, task_uuid_str: String) -> Result<usize, AppError> {
         let mut conn = pool.get()?;
-        let res =
-            diesel::delete(tasks::table.filter(tasks::id.eq(task_uuid))).execute(&mut conn)?;
+        let res = diesel::delete(
+            tasks::table.filter(tasks::id.eq(Uuid::parse_str(task_uuid_str.as_str())?)),
+        )
+        .execute(&mut conn)?;
 
         Ok(res)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct CreateTask {
+    #[validate(length(
+        min = 1,
+        max = 60,
+        message = "Title must be between 1 and 60 characters long"
+    ))]
     pub title: String,
+    #[validate(length(min = 1, message = "Body must be at least 1 character long"))]
     pub body: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct UpdateTask {
-    pub id: uuid::Uuid,
+    #[validate(
+        length(equal = 36, message = "UUID must be exactly 32 hex digits + 4 dashes"),
+        custom = "validate_uuid_str"
+    )]
+    pub id: String,
+    #[validate(length(
+        min = 1,
+        max = 60,
+        message = "Title must be between 1 and 60 characters long"
+    ))]
     pub title: String,
+    #[validate(length(min = 1, message = "Body must be at least 1 character long"))]
     pub body: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 pub struct DeleteTask {
-    pub id: uuid::Uuid,
+    #[validate(
+        length(equal = 36, message = "UUID must be exactly 32 hex digits + 4 dashes"),
+        custom = "validate_uuid_str"
+    )]
+    pub id: String,
 }
+
+fn validate_uuid_str(uuid_str: &str) -> Result<(), ValidationError> {
+    match Uuid::parse_str(uuid_str) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(ValidationError::new("Invalid UUID")),
+    }
+}
+
+// TODO: Unit tests with diesel's test_transaction
