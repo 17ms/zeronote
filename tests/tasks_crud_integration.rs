@@ -35,7 +35,7 @@ impl Context {
         let psql_pw = env::var("POSTGRES_PASSWORD")
             .expect("POSTGRES_PASSWORD must be set for integration tests");
         let database_url = format!(
-            "postgresql://localhost/postgres?user={}&password={}",
+            "postgres://{}:{}@localhost:5432/postgres",
             psql_user, psql_pw
         );
         let mut conn = PgConnection::establish(&database_url)
@@ -57,7 +57,7 @@ impl Context {
 impl Drop for Context {
     fn drop(&mut self) {
         let database_url = format!(
-            "postgresql://localhost/postgres?user={}&password={}",
+            "postgres://{}:{}@localhost:5432/postgres",
             self.psql_user, self.psql_pw
         );
         let mut conn = PgConnection::establish(&database_url)
@@ -72,8 +72,8 @@ impl Drop for Context {
 
 fn create_pool(ctx: &Context) -> Pool {
     let database_url = format!(
-        "postgresql://localhost/{}?user={}&password={}",
-        ctx.db_name, ctx.psql_user, ctx.psql_pw
+        "postgres://{}:{}@localhost:5432/{}",
+        ctx.psql_user, ctx.psql_pw, ctx.db_name
     );
     // Pool is unnecessary for tests, but easier than completely changing Actix's web::Data type
     let pool = init_pool(database_url);

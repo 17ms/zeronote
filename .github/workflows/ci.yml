@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: Continuous integration
+name: CI
 
 env:
   CARGO_TERM_COLOR: always
@@ -9,6 +9,7 @@ jobs:
   check:
     name: Check
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -24,22 +25,25 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
+          args: --verbose
 
   test:
+    name: Test
     runs-on: ubuntu-latest
-    container: rust:latest
     services:
       postgres:
-        image: postgres:latest
+        image: postgres
         env:
           POSTGRES_PASSWORD: postgres
         ports:
           - 5432:5432
+        # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -51,10 +55,14 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: Test postgres connection
+        run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
+
       - name: Cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
+          args: --verbose
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -62,6 +70,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
@@ -73,7 +82,8 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Cargo build release
+      - name: Cargo build
         uses: actions-rs/cargo@v1
         with:
-          command: build --release
+          command: build
+          args: --verbose
