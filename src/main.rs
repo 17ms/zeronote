@@ -1,13 +1,20 @@
 use actix_web::{web, App, HttpResponse, HttpServer};
 use dotenv::dotenv;
 use std::env;
-use zeronote::{database::connection::init_pool, errors::AppError, handlers::tasks::*};
+use zeronote::{
+    database::connection::{init_pool, run_migrations},
+    errors::AppError,
+    handlers::tasks::*,
+};
 
 #[actix_web::main]
 async fn main() -> Result<(), std::io::Error> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = init_pool(database_url);
+    let mut conn = pool.get().unwrap();
+    run_migrations(&mut conn);
+
     // TODO: Logging
 
     HttpServer::new(move || {

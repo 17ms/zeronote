@@ -124,5 +124,3 @@ fn validate_uuid_str(uuid_str: &str) -> Result<(), ValidationError> {
         Err(_) => Err(ValidationError::new("Invalid UUID")),
     }
 }
-
-// TODO: Unit tests with diesel's test_transaction

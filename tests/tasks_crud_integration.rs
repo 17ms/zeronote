@@ -6,13 +6,12 @@ use actix_web::{
     App, Error,
 };
 use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenv::dotenv;
 use serde_json::json;
 use std::env;
 use zeronote::{
     database::{
-        connection::{init_pool, Pool},
+        connection::{init_pool, run_migrations, Pool},
         models::Task,
     },
     errors::{AppError, AppErrorResponse},
@@ -22,19 +21,23 @@ use zeronote::{
 // Integration tests for JSON based CRUD requests (regarding tasks)
 // Each test runs in a separate database (because of parallelism)
 
-const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
-
 struct Context {
     pub db_name: String,
-    pub psql_cred: String,
+    pub psql_user: String,
+    pub psql_pw: String,
 }
 
 impl Context {
     fn new(db_name: &str) -> Self {
         dotenv().ok();
-        let psql_cred =
-            env::var("PSQL_CREDENTIALS").expect("PSQL_CRED must be set for integration tests");
-        let database_url = format!("postgresql://localhost/postgres?{}", psql_cred);
+        let psql_user =
+            env::var("POSTGRES_USER").expect("POSTGRES_USER must be set for integration tests");
+        let psql_pw = env::var("POSTGRES_PASSWORD")
+            .expect("POSTGRES_PASSWORD must be set for integration tests");
+        let database_url = format!(
+            "postgresql://localhost/postgres?user={}&password={}",
+            psql_user, psql_pw
+        );
         let mut conn = PgConnection::establish(&database_url)
             .expect("Failed to connect to the database 'postgres'");
 
@@ -45,14 +48,18 @@ impl Context {
 
         Self {
             db_name: db_name.to_string(),
-            psql_cred,
+            psql_user,
+            psql_pw,
         }
     }
 }
 
 impl Drop for Context {
     fn drop(&mut self) {
-        let database_url = format!("postgresql://localhost/postgres?{}", self.psql_cred);
+        let database_url = format!(
+            "postgresql://localhost/postgres?user={}&password={}",
+            self.psql_user, self.psql_pw
+        );
         let mut conn = PgConnection::establish(&database_url)
             .expect("Failed to connect to the database 'postgres'");
 
@@ -63,17 +70,21 @@ impl Drop for Context {
     }
 }
 
-fn run_migrations(ctx: &Context) -> Pool {
-    let database_url = format!("postgresql://localhost/{}?{}", ctx.db_name, ctx.psql_cred);
+fn create_pool(ctx: &Context) -> Pool {
+    let database_url = format!(
+        "postgresql://localhost/{}?user={}&password={}",
+        ctx.db_name, ctx.psql_user, ctx.psql_pw
+    );
     // Pool is unnecessary for tests, but easier than completely changing Actix's web::Data type
     let pool = init_pool(database_url);
     let mut conn = pool.get().unwrap();
 
     let query = sql_query("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";");
+    println!("Created extension uuid-ossp");
     query
         .execute(&mut conn)
         .expect("Couldn't install postgres extension 'uuid-ossp'");
-    conn.run_pending_migrations(MIGRATIONS).unwrap();
+    run_migrations(&mut conn);
 
     pool
 }
@@ -157,7 +168,7 @@ async fn get_invalid_json_res(
 #[actix_web::test]
 async fn test_create_task_req() {
     let ctx = Context::new("create_task_test");
-    let pool = run_migrations(&ctx);
+    let pool = create_pool(&ctx);
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool.clone()))
@@ -186,7 +197,7 @@ async fn test_create_task_req() {
 #[actix_web::test]
 async fn test_update_task_req() {
     let ctx = Context::new("update_task_test");
-    let pool = run_migrations(&ctx);
+    let pool = create_pool(&ctx);
     let app = test::init_service(
         App::new().app_data(web::Data::new(pool.clone())).service(
             web::scope("/api")
@@ -220,7 +231,7 @@ async fn test_update_task_req() {
 #[actix_web::test]
 async fn test_read_tasks_req() {
     let ctx = Context::new("read_tasks_test");
-    let pool = run_migrations(&ctx);
+    let pool = create_pool(&ctx);
     let app = test::init_service(
         App::new().app_data(web::Data::new(pool.clone())).service(
             web::scope("/api")
@@ -268,7 +279,7 @@ async fn test_read_tasks_req() {
 #[actix_web::test]
 async fn test_delete_task_req() {
     let ctx = Context::new("delete_task_test");
-    let pool = run_migrations(&ctx);
+    let pool = create_pool(&ctx);
     let app = test::init_service(
         App::new().app_data(web::Data::new(pool.clone())).service(
             web::scope("/api")
@@ -302,7 +313,7 @@ async fn test_delete_task_req() {
 #[actix_web::test]
 async fn test_invalid_json_body_req() {
     let ctx = Context::new("invalid_json_test");
-    let pool = run_migrations(&ctx);
+    let pool = create_pool(&ctx);
     let app = test::init_service(
         App::new()
             .app_data(
