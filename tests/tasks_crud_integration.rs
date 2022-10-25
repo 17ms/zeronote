@@ -226,6 +226,10 @@ async fn test_update_task_req() {
         "New body".to_string(),
         "Task in the response doesn't match the original"
     );
+    assert_ne!(
+        create_res_body.created_at, update_res_body.updated_at,
+        "Field 'updated_at' not updated properly"
+    );
 }
 
 #[actix_web::test]
