@@ -12,7 +12,7 @@ use std::env;
 use zeronote::{
     database::{
         connection::{init_pool, run_migrations, Pool},
-        models::Task,
+        models::{Task, TaskCondition},
     },
     errors::{AppError, AppErrorResponse},
     handlers::tasks::*,
@@ -114,7 +114,8 @@ async fn get_update_task_res(
     let req_body = json!({
         "id": id,
         "title": new_title,
-        "body": "New body"
+        "body": "New body",
+        "condition": "active",
     });
     let req = test::TestRequest::put()
         .uri("/api/update")
@@ -219,12 +220,17 @@ async fn test_update_task_req() {
     assert_eq!(
         update_res_body.title,
         "New title".to_string(),
-        "Task in the response doesn't match the original"
+        "Task in the response doesn't match"
     );
     assert_eq!(
         update_res_body.body,
         "New body".to_string(),
-        "Task in the response doesn't match the original"
+        "Task in the response doesn't match"
+    );
+    assert_eq!(
+        update_res_body.condition,
+        TaskCondition::Active,
+        "Task in the response doesn't match"
     );
     assert_ne!(
         create_res_body.created_at, update_res_body.updated_at,
