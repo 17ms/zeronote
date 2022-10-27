@@ -1659,7 +1659,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zeronote"
+name = "zeronote-api"
 version = "0.1.0"
 dependencies = [
  "actix-http",

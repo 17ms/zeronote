@@ -25,7 +25,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --verbose
+          args: --manifest-path zeronote-api/Cargo.toml --verbose
 
   test:
     name: Test
@@ -62,7 +62,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --verbose
+          args: --manifest-path zeronote-api/Cargo.toml --verbose
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -86,4 +86,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose
+          args: --manifest-path zeronote-api/Cargo.toml --verbose

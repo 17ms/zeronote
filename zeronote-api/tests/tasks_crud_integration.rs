@@ -9,7 +9,7 @@ use diesel::{sql_query, Connection, PgConnection, RunQueryDsl};
 use dotenv::dotenv;
 use serde_json::json;
 use std::env;
-use zeronote::{
+use zeronote_api::{
     database::{
         connection::{init_pool, run_migrations, Pool},
         models::{Task, TaskCondition},

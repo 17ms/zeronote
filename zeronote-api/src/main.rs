@@ -1,7 +1,7 @@
 use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer};
 use dotenv::dotenv;
 use std::env;
-use zeronote::{
+use zeronote_api::{
     database::connection::{init_pool, run_migrations},
     errors::AppError,
     handlers::tasks::*,

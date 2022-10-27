@@ -1,5 +1,5 @@
 [package]
-name = "zeronote"
+name = "zeronote-api"
 description = "Lightweight CRUD API with Actix Web"
 version = "0.1.0"
 edition = "2021"
