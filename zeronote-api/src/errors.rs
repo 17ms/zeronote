@@ -12,8 +12,8 @@ pub enum AppErrorType {
     DieselR2d2Error,
     ActixWebBlockingError,
     ValidationError,
+    UnauthorizedError,
     //NotFoundError, (404)
-    //UnauthorizedError, (401)
     //TooManyRequestsError, (429)
 }
 
@@ -26,61 +26,37 @@ pub struct AppError {
 
 impl From<diesel::result::Error> for AppError {
     fn from(_: diesel::result::Error) -> Self {
-        AppError {
-            code: "500".to_string(),
-            message: "Internal Server Error".to_string(),
-            error: AppErrorType::DieselResultError,
-        }
+        AppError::new(AppErrorType::DieselResultError)
     }
 }
 
 impl From<diesel::r2d2::PoolError> for AppError {
     fn from(_: diesel::r2d2::PoolError) -> Self {
-        AppError {
-            code: "500".to_string(),
-            message: "Internal Server Error".to_string(),
-            error: AppErrorType::DieselR2d2Error,
-        }
+        AppError::new(AppErrorType::DieselR2d2Error)
     }
 }
 
 impl From<actix_web::error::BlockingError> for AppError {
     fn from(_: actix_web::error::BlockingError) -> Self {
-        AppError {
-            code: "500".to_string(),
-            message: "Internal Server Error".to_string(),
-            error: AppErrorType::ActixWebBlockingError,
-        }
+        AppError::new(AppErrorType::ActixWebBlockingError)
     }
 }
 
 impl From<validator::ValidationErrors> for AppError {
     fn from(err: validator::ValidationErrors) -> Self {
-        AppError {
-            code: "400".to_string(),
-            message: err.to_string(),
-            error: AppErrorType::ValidationError,
-        }
+        AppError::new(AppErrorType::ValidationError)
     }
 }
 
 impl From<uuid::Error> for AppError {
     fn from(_: uuid::Error) -> Self {
-        AppError {
-            code: "400".to_string(),
-            message: "Invalid UUID".to_string(),
-            error: AppErrorType::ValidationError,
-        }
+        AppError::new(AppErrorType::ValidationError)
     }
 }
 
 impl From<&actix_web::error::JsonPayloadError> for AppError {
     fn from(_: &actix_web::error::JsonPayloadError) -> Self {
-        AppError {
-            code: "400".to_string(),
-            message: "Invalid JSON payload".to_string(),
-            error: AppErrorType::ValidationError,
-        }
+        AppError::new(AppErrorType::ValidationError)
     }
 }
 
@@ -97,6 +73,7 @@ impl ResponseError for AppError {
             AppErrorType::DieselR2d2Error => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::ActixWebBlockingError => StatusCode::INTERNAL_SERVER_ERROR,
             AppErrorType::ValidationError => StatusCode::BAD_REQUEST,
+            AppErrorType::UnauthorizedError => StatusCode::UNAUTHORIZED,
         }
     }
 
@@ -109,6 +86,32 @@ impl ResponseError for AppError {
 }
 
 impl AppError {
+    pub fn new(error_type: AppErrorType) -> Self {
+        let (code, message, error) = match error_type {
+            AppErrorType::ActixWebBlockingError => {
+                ("500".into(), "Internal Server Error".into(), error_type)
+            }
+            AppErrorType::DieselR2d2Error => {
+                ("500".into(), "Internal Server Error".into(), error_type)
+            }
+            AppErrorType::DieselResultError => {
+                ("500".into(), "Internal Server Error".into(), error_type)
+            }
+            AppErrorType::ValidationError => {
+                ("400".into(), "Invalid JSON payload".into(), error_type)
+            }
+            AppErrorType::UnauthorizedError => {
+                ("401".into(), "Unauthorized request".into(), error_type)
+            }
+        };
+
+        AppError {
+            code,
+            message,
+            error,
+        }
+    }
+
     pub fn json_default_err_handler(err: JsonPayloadError) -> InternalError<JsonPayloadError> {
         let app_err = AppError::from(&err);
         error::InternalError::from_response(
