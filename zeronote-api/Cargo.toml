@@ -15,6 +15,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.2.1", features = ["v4", "serde"] }
 validator = { version = "0.16.0", features = ["derive"] }
 diesel_migrations = "2.0.0"
+actix-cors = "0.6.4"
 actix-web = "4.2.1"
 dotenv = "0.15.0"
 log = "0.4"

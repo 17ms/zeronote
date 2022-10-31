@@ -6,11 +6,17 @@ use zeronote_api::{
     errors::AppError,
     handlers::tasks::*,
     log::init_logger,
+    middlewares::{cors::cors, security_headers::security_headers},
 };
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     dotenv().ok();
+    let port = env::var("PORT")
+        .expect("PORT must be set")
+        .parse::<u16>()
+        .expect("PORT must be of type u16");
+    let client_origin_url = env::var("CLIENT_ORIGIN_URL").expect("CLIENT_ORIGIN_URL must be set");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = init_pool(database_url);
     let mut conn = pool.get().unwrap();
@@ -21,6 +27,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
+            .wrap(cors(&client_origin_url))
+            .wrap(security_headers())
             .app_data(
                 web::JsonConfig::default()
                     .error_handler(|err, _| AppError::json_default_err_handler(err).into()),
@@ -35,7 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + 'static>> {
             )
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", port))?
     .run()
     .await?;
 
