@@ -1,9 +1,11 @@
 [package]
 name = "zeronote-ui"
-description = "Minimal UI with Yew"
+description = "Proof of concept UI with yew"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+yew-oauth2 = { version = "0.4.0", features = ["router"] } # routes not used yet
+yew = "0.19.3"

@@ -328,7 +328,7 @@ async fn test_invalid_json_body_req() {
         App::new()
             .app_data(
                 web::JsonConfig::default()
-                    .error_handler(|err, _| AppError::json_default_err_handler(err).into()),
+                    .error_handler(|err, _| AppError::JsonPayLoad(err).into()),
             )
             .app_data(web::Data::new(pool.clone()))
             .service(web::scope("/api").service(create_new_task)),

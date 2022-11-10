@@ -1,0 +1,3 @@
+[workspace]
+members = ["zeronote-ui", "zeronote-api"]
+default-members = ["zeronote-api"]

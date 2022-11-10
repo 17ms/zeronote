@@ -8,12 +8,13 @@ use crate::{
 use actix_web::{delete, get, post, put, web, HttpResponse};
 use validator::Validate;
 
+// Handlers for basic CRUD functionality regarding tasks
+
 #[get("/all")]
 pub async fn get_all_tasks(pool: web::Data<Pool>) -> Result<HttpResponse, AppError> {
     let tasks_vec = web::block(move || Task::get_all(pool))
         .await
-        .unwrap()
-        .unwrap();
+        .map_err(AppError::WebBlocking)??;
 
     Ok(HttpResponse::Ok().json(tasks_vec))
 }

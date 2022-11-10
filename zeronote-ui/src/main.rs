@@ -1,3 +1,5 @@
+use zeronote_ui::App;
+
 fn main() {
-    println!("Hello, world!");
+    yew::start_app::<App>();
 }

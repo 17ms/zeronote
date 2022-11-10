@@ -1,0 +1,12 @@
+/zeronote-api/target
+/zeronote-ui/target
+/zeronote-ui/dist
+/zeronote-ui/pkg
+/target
+
+key.pem
+cert.pem
+
+*.env
+*.txt
+*.log

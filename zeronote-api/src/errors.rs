@@ -1,10 +1,10 @@
 use actix_http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
-use actix_web_httpauth::headers::www_authenticate::bearer::Bearer;
+use oauth2::{basic::BasicErrorResponseType, RequestTokenError, StandardErrorResponse};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-// Wrapper for general errors to make them readable and returnable as responses
+// Wrapper for general errors to make them readable for users and returnable as responses
 
 #[derive(Debug)]
 pub enum AppError {
@@ -14,9 +14,13 @@ pub enum AppError {
     Validator(validator::ValidationErrors),
     Uuid(uuid::Error),
     JsonPayLoad(actix_web::error::JsonPayloadError),
-    WebAuthentication(actix_web_httpauth::extractors::AuthenticationError<Bearer>),
-    JWTDecode(jsonwebtoken::errors::Error),
-    JWTUnsupportedAlgorithm(jsonwebtoken::jwk::AlgorithmParameters),
+    RequestToken(
+        RequestTokenError<
+            oauth2::reqwest::Error<reqwest::Error>,
+            StandardErrorResponse<BasicErrorResponseType>,
+        >,
+    ),
+    Oauth2Parse(oauth2::url::ParseError),
     AuthNotFound(String),
 }
 
@@ -35,9 +39,8 @@ impl ResponseError for AppError {
             Self::Validator(_) => StatusCode::BAD_REQUEST,
             Self::Uuid(_) => StatusCode::BAD_REQUEST,
             Self::JsonPayLoad(_) => StatusCode::BAD_REQUEST,
-            Self::WebAuthentication(_) => StatusCode::UNAUTHORIZED,
-            Self::JWTDecode(_) => StatusCode::UNAUTHORIZED,
-            Self::JWTUnsupportedAlgorithm(_) => StatusCode::UNAUTHORIZED,
+            Self::RequestToken(_) => StatusCode::UNAUTHORIZED,
+            Self::Oauth2Parse(_) => StatusCode::UNAUTHORIZED,
             Self::AuthNotFound(_) => StatusCode::UNAUTHORIZED,
         }
     }
@@ -68,17 +71,8 @@ impl AppErrorResponse {
             AppError::Validator(_) => ("400".into(), "Invalid JSON payload".into()),
             AppError::Uuid(_) => ("400".into(), "Invalid UUID".into()),
             AppError::JsonPayLoad(_) => ("400".into(), "Invalid JSON payload".into()),
-            AppError::WebAuthentication(_) => {
-                ("401".into(), "Resource requires authentication".into())
-            }
-            AppError::JWTDecode(_) => (
-                "401".into(),
-                "Authorization header must follow format 'Bearer <access-token>'".into(),
-            ),
-            AppError::JWTUnsupportedAlgorithm(algorithm) => (
-                "401".into(),
-                format!("Unsupported encryption algorithm, found '{:?}'", algorithm),
-            ),
+            AppError::RequestToken(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::Oauth2Parse(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::AuthNotFound(s) => ("401".into(), s.into()),
         };
 

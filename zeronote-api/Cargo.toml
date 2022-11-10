@@ -14,14 +14,16 @@ serde = { version = "1.0.145", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "1.2.1", features = ["v4", "serde"] }
 validator = { version = "0.16.0", features = ["derive"] }
+actix-web = { version = "4.2.1", features = ["openssl"] }
+jsonwebtokens-cognito = "0.1.1"
 actix-web-httpauth = "0.8.0"
 diesel_migrations = "2.0.0"
-actix-cors = "0.6.4"
 actix-http = "3.2.2"
-actix-web = "4.2.1"
-jsonwebtoken = "8"
+actix-cors = "0.6.4"
+reqwest = "0.11.12"
+openssl = "0.10.42"
 dotenv = "0.15.0"
-awc = "3.0.1"
+oauth2 = "4.2.3"
 log = "0.4"
 
 [dev-dependencies]
