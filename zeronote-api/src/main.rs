@@ -1,12 +1,12 @@
 use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer};
+use common::errors::app_error::AppError;
 use dotenv::dotenv;
 use std::env;
 use zeronote_api::{
     database::connection::{init_pool, run_migrations},
-    errors::AppError,
-    extractors::token::CognitoConfig,
-    handlers::{auth::*, tasks::*},
+    handlers::{auth::fetch_jwt, tasks::*},
     middlewares::{auth, cors::cors, security_headers::security_headers},
+    services::auth::CognitoConfig,
     utils::{log::init_logger, ssl_builder::create_builder},
 };
 
@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client_origin_url = env::var("CLIENT_ORIGIN_URL").expect("CLIENT_ORIGIN_URL must be set");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let pool = init_pool(database_url);
-    let mut conn = pool.get().unwrap();
+    let mut conn = pool.get()?;
     run_migrations(&mut conn);
 
     // make actix-web HTTPS capable
@@ -37,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(cognito_cfg.clone()))
-            .service(web::scope("/auth").service(get_token))
+            .service(web::scope("/auth").service(fetch_jwt))
             .service(
                 web::scope("/api")
                     .service(create_new_task)

@@ -1,21 +1,19 @@
-use crate::{errors::AppError, extractors::token::*};
+use crate::services::auth::*;
 use actix_web::{post, web};
+use common::errors::app_error::AppError;
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse};
 
-// Handler for Cognito's /oauth2/token request
+// Verifies PKCE code & fetches access and refresh tokens from AWS
 
-// TODO: remove panics
 #[post("/token")]
-pub async fn get_token(
+pub async fn fetch_jwt(
     config: web::Data<CognitoConfig>,
     body: web::Form<AuthTokenBody>,
-) -> web::Json<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
-    let token_json = web::block(move || verify_token_req_code(config, body))
+) -> Result<web::Json<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>>, AppError> {
+    let token_json = web::block(move || pkce_code_verification(config, body))
         .await
-        .map_err(AppError::WebBlocking)
-        .unwrap()
-        .await
-        .unwrap();
+        .map_err(AppError::WebBlocking)?
+        .await?;
 
-    token_json
+    Ok(token_json)
 }

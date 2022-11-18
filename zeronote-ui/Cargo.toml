@@ -7,5 +7,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-yew-oauth2 = { version = "0.4.0", features = ["router"] } # routes not used yet
+yew-oauth2 = { version = "0.4.0", features = ["router"] }
+yew-router = "0.16.0"
+gloo-net = "0.2.4"
 yew = "0.19.3"

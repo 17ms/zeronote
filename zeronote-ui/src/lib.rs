@@ -1,3 +1,6 @@
+pub mod component;
+
+//use gloo_net::http::Request;
 use yew::{function_component, html, Callback, MouseEvent};
 use yew_oauth2::{
     oauth2::{Client, Config, OAuth2},
@@ -22,10 +25,17 @@ pub fn app() -> Html {
     html!(
         <OAuth2 {config}>
             <Authenticated>
-                <p><button onclick={logout}>{ "Logout" }</button></p>
+                <p>
+                    <button onclick={logout}>{ "Logout" }</button>
+                </p>
+                //<BrowserRouter>
+                //    <Switch<AppRoute> render={Switch::render(switch)}/>
+                //</BrowserRouter>
             </Authenticated>
             <NotAuthenticated>
-                <p><button onclick={login.clone()}>{ "Login" }</button></p>
+                <p>
+                    <button onclick={login}>{ "Login" }</button>
+                </p>
             </NotAuthenticated>
         </OAuth2>
     )

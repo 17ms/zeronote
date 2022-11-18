@@ -1,7 +1,5 @@
 use actix_web::{http::header, middleware::DefaultHeaders};
 
-// Some standard security related HTTP headers
-
 pub fn security_headers() -> DefaultHeaders {
     DefaultHeaders::new()
         .add((header::X_XSS_PROTECTION, "0"))

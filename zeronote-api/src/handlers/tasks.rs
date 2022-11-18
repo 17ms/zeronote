@@ -1,18 +1,13 @@
-use crate::{
-    database::{
-        connection::Pool,
-        models::{CreateTask, DeleteTask, Task, UpdateTask},
-    },
-    errors::AppError,
-};
+use crate::{database::connection::Pool, services::tasks};
 use actix_web::{delete, get, post, put, web, HttpResponse};
+use common::{errors::app_error::AppError, models::task::*};
 use validator::Validate;
 
 // Handlers for basic CRUD functionality regarding tasks
 
 #[get("/all")]
 pub async fn get_all_tasks(pool: web::Data<Pool>) -> Result<HttpResponse, AppError> {
-    let tasks_vec = web::block(move || Task::get_all(pool))
+    let tasks_vec = web::block(move || tasks::get_all(pool))
         .await
         .map_err(AppError::WebBlocking)??;
 
@@ -25,7 +20,7 @@ pub async fn create_new_task(
     task: web::Json<CreateTask>,
 ) -> Result<HttpResponse, AppError> {
     task.validate().map_err(AppError::Validator)?;
-    let res = web::block(move || Task::create(pool, task.into_inner()))
+    let res = web::block(move || tasks::create(pool, task.into_inner()))
         .await
         .map_err(AppError::WebBlocking)??;
 
@@ -38,7 +33,7 @@ pub async fn update_task(
     task: web::Json<UpdateTask>,
 ) -> Result<HttpResponse, AppError> {
     task.validate().map_err(AppError::Validator)?;
-    let res = web::block(move || Task::update(pool, task.into_inner()))
+    let res = web::block(move || tasks::update(pool, task.into_inner()))
         .await
         .map_err(AppError::WebBlocking)??;
 
@@ -51,7 +46,7 @@ pub async fn delete_task(
     task: web::Json<DeleteTask>,
 ) -> Result<HttpResponse, AppError> {
     task.validate().map_err(AppError::Validator)?;
-    let res = web::block(move || Task::delete(pool, task.into_inner().id))
+    let res = web::block(move || tasks::delete(pool, task.into_inner().id))
         .await
         .map_err(AppError::WebBlocking)??;
 

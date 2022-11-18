@@ -1,4 +1,4 @@
-use crate::extractors::token::CognitoConfig;
+use crate::services::auth::CognitoConfig;
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     web, Error,
@@ -11,6 +11,8 @@ use std::{
 };
 
 // Verifies the JWT found in the req auth header
+
+// TODO: finish checks and remove panics
 
 pub struct Authentication;
 
@@ -54,7 +56,6 @@ where
         self.service.poll_ready(ctx)
     }
 
-    // TODO: remove panics
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let svc = self.service.clone();
 

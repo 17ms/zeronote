@@ -1,4 +1,5 @@
 use actix_web::web;
+use common::errors::app_error::AppError;
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     reqwest::async_http_client,
@@ -8,11 +9,9 @@ use oauth2::{
 use serde::{Deserialize, Serialize};
 use std::env;
 
-use crate::errors::AppError;
-
 #[derive(Debug, Clone)]
 pub struct CognitoConfig {
-    // TODO: remove from production
+    // .env should be removed from production
     pub auth_url: String,
     pub token_url: String,
     pub client_id: String,
@@ -42,12 +41,6 @@ impl Default for CognitoConfig {
     }
 }
 
-// TODO: https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-the-id-token.html
-//#[derive(Debug, Serialize, Deserialize)]
-//pub struct IDTokenBody {
-//    email: String,
-//}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthTokenBody {
     grant_type: String,
@@ -57,15 +50,14 @@ pub struct AuthTokenBody {
     redirect_uri: String,
 }
 
-// TODO: replace debugging prints and panics
-pub async fn verify_token_req_code(
+pub async fn pkce_code_verification(
     config: web::Data<CognitoConfig>,
     body: web::Form<AuthTokenBody>,
 ) -> Result<web::Json<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>>, AppError> {
     let req = body.into_inner();
     let config = config.into_inner();
     let client = BasicClient::new(
-        ClientId::new(config.client_id.clone()),
+        ClientId::new(req.client_id.clone()),
         Some(ClientSecret::new(config.client_secret.clone())),
         AuthUrl::new(config.auth_url.clone()).map_err(AppError::Oauth2Parse)?,
         Some(TokenUrl::new(config.token_url.clone()).map_err(AppError::Oauth2Parse)?),
@@ -81,10 +73,6 @@ pub async fn verify_token_req_code(
 
     match token_result {
         Ok(value) => Ok(web::Json(value)),
-        Err(e) => {
-            println!("\n{:#?}", client);
-            println!("\n{:#?}", e);
-            Err(AppError::RequestToken(e))
-        }
+        Err(e) => Err(AppError::RequestToken(e)),
     }
 }

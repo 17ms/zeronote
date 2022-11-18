@@ -4,7 +4,8 @@ use oauth2::{basic::BasicErrorResponseType, RequestTokenError, StandardErrorResp
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-// Wrapper for general errors to make them readable for users and returnable as responses
+// Wrapper for general backend errors to make them readable
+// for host and returnable as responses to clients
 
 #[derive(Debug)]
 pub enum AppError {
