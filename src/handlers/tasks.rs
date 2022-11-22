@@ -1,6 +1,7 @@
-use crate::{database::connection::Pool, services::tasks};
+use crate::{
+    database::connection::Pool, errors::app_error::AppError, models::task::*, services::tasks,
+};
 use actix_web::{delete, get, post, put, web, HttpResponse};
-use common::{errors::app_error::AppError, models::task::*};
 use validator::Validate;
 
 // Handlers for basic CRUD functionality regarding tasks

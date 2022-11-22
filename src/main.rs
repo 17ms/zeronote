@@ -1,9 +1,9 @@
 use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer};
-use common::errors::app_error::AppError;
 use dotenv::dotenv;
 use std::env;
-use zeronote_api::{
+use zeronote::{
     database::connection::{init_pool, run_migrations},
+    errors::app_error::AppError,
     handlers::{auth::fetch_jwt, tasks::*},
     middlewares::{auth, cors::cors, security_headers::security_headers},
     services::auth::CognitoConfig,

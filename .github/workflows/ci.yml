@@ -25,7 +25,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --manifest-path zeronote-api/Cargo.toml --verbose
+          args: --verbose
 
   #test:
   #  name: Test
@@ -86,4 +86,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --manifest-path zeronote-api/Cargo.toml --verbose
+          args: --verbose

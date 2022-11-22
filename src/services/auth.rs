@@ -1,5 +1,5 @@
+use crate::errors::app_error::AppError;
 use actix_web::web;
-use common::errors::app_error::AppError;
 use oauth2::{
     basic::{BasicClient, BasicTokenType},
     reqwest::async_http_client,

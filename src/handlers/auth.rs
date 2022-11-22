@@ -1,6 +1,5 @@
-use crate::services::auth::*;
+use crate::{errors::app_error::AppError, services::auth::*};
 use actix_web::{post, web};
-use common::errors::app_error::AppError;
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse};
 
 // Verifies PKCE code & fetches access and refresh tokens from AWS
