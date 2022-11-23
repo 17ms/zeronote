@@ -73,6 +73,6 @@ pub async fn pkce_code_verification(
 
     match token_result {
         Ok(value) => Ok(web::Json(value)),
-        Err(e) => Err(AppError::RequestToken(e)),
+        Err(e) => Err(AppError::OAuth2Token(e)),
     }
 }

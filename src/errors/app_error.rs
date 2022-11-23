@@ -4,8 +4,7 @@ use oauth2::{basic::BasicErrorResponseType, RequestTokenError, StandardErrorResp
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-// Wrapper for general backend errors to make them readable
-// for host and returnable as responses to clients
+// Wrapper for generic backend errors to convert them to responses
 
 #[derive(Debug)]
 pub enum AppError {
@@ -15,13 +14,17 @@ pub enum AppError {
     Validator(validator::ValidationErrors),
     Uuid(uuid::Error),
     JsonPayLoad(actix_web::error::JsonPayloadError),
-    RequestToken(
+    OAuth2Token(
         RequestTokenError<
             oauth2::reqwest::Error<reqwest::Error>,
             StandardErrorResponse<BasicErrorResponseType>,
         >,
     ),
     Oauth2Parse(oauth2::url::ParseError),
+    JWTGeneric(jsonwebtokens::error::Error),
+    JWTCognito(jsonwebtokens_cognito::Error),
+    HeaderToStr(actix_http::header::ToStrError),
+    MissingConfig(String),
     AuthNotFound(String),
 }
 
@@ -37,11 +40,15 @@ impl ResponseError for AppError {
             Self::DieselResult(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::DieselPool(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::WebBlocking(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::MissingConfig(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::Validator(_) => StatusCode::BAD_REQUEST,
             Self::Uuid(_) => StatusCode::BAD_REQUEST,
             Self::JsonPayLoad(_) => StatusCode::BAD_REQUEST,
-            Self::RequestToken(_) => StatusCode::UNAUTHORIZED,
+            Self::OAuth2Token(_) => StatusCode::UNAUTHORIZED,
             Self::Oauth2Parse(_) => StatusCode::UNAUTHORIZED,
+            Self::JWTGeneric(_) => StatusCode::UNAUTHORIZED,
+            Self::JWTCognito(_) => StatusCode::UNAUTHORIZED,
+            Self::HeaderToStr(_) => StatusCode::UNAUTHORIZED,
             Self::AuthNotFound(_) => StatusCode::UNAUTHORIZED,
         }
     }
@@ -69,11 +76,15 @@ impl AppErrorResponse {
             AppError::DieselResult(_) => ("500".into(), "Internal Server Error".into()),
             AppError::DieselPool(_) => ("500".into(), "Internal Server Error".into()),
             AppError::WebBlocking(_) => ("500".into(), "Internal Server Error".into()),
+            AppError::MissingConfig(s) => ("500".into(), s.into()),
             AppError::Validator(_) => ("400".into(), "Invalid JSON payload".into()),
             AppError::Uuid(_) => ("400".into(), "Invalid UUID".into()),
             AppError::JsonPayLoad(_) => ("400".into(), "Invalid JSON payload".into()),
-            AppError::RequestToken(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::OAuth2Token(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::Oauth2Parse(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JWTGeneric(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JWTCognito(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::HeaderToStr(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::AuthNotFound(s) => ("401".into(), s.into()),
         };
 

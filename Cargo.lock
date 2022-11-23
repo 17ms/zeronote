@@ -2268,6 +2268,7 @@ dependencies = [
  "diesel-derive-enum",
  "diesel_migrations",
  "dotenv",
+ "jsonwebtokens",
  "jsonwebtokens-cognito",
  "log",
  "log4rs",

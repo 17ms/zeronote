@@ -44,7 +44,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .service(get_all_tasks)
                     .service(delete_task)
                     .service(update_task)
-                    .wrap(auth::Authentication),
+                    .wrap(auth::Authorization),
             )
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
