@@ -123,3 +123,22 @@ fn validate_task_cond_str(cond_str: &str) -> Result<(), ValidationError> {
         Err(_) => Err(ValidationError::new("Invalid task condition")),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_uuid_validation() {
+        let invalid_uuid = "550e840-e29b-41d4-a716-44665540000";
+        assert!(validate_uuid_str(invalid_uuid).is_err());
+    }
+
+    #[test]
+    fn test_task_cond_validation() {
+        let valid_task_cond = "active";
+        let invalid_task_cond = "down";
+        assert!(validate_task_cond_str(valid_task_cond).is_ok());
+        assert!(validate_task_cond_str(invalid_task_cond).is_err());
+    }
+}

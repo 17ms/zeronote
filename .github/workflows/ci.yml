@@ -27,6 +27,28 @@ jobs:
           command: check
           args: --verbose
 
+
+    test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --verbose
+
   #test:
   #  name: Test
   #  runs-on: ubuntu-latest
@@ -62,7 +84,7 @@ jobs:
   #      uses: actions-rs/cargo@v1
   #      with:
   #        command: test
-  #        args: --manifest-path zeronote-api/Cargo.toml --verbose
+  #        args: --verbose
   #      env:
   #        POSTGRES_USER: postgres
   #        POSTGRES_PASSWORD: postgres
