@@ -27,8 +27,7 @@ jobs:
           command: check
           args: --verbose
 
-
-    test:
+  test:
     name: Test
     runs-on: ubuntu-latest
 
@@ -48,46 +47,6 @@ jobs:
         with:
           command: test
           args: --verbose
-
-  #test:
-  #  name: Test
-  #  runs-on: ubuntu-latest
-  #  services:
-  #    postgres:
-  #      image: postgres
-  #      env:
-  #        POSTGRES_PASSWORD: postgres
-  #      ports:
-  #        - 5432:5432
-  #      # Set health checks to wait until postgres has started
-  #      options: >-
-  #        --health-cmd pg_isready
-  #        --health-interval 10s
-  #        --health-timeout 5s
-  #        --health-retries 5
-
-  #  steps:
-  #    - name: Checkout sources
-  #      uses: actions/checkout@v2
-
-  #    - name: Install stable toolchain
-  #      uses: actions-rs/toolchain@v1
-  #      with:
-  #        profile: minimal
-  #        toolchain: stable
-  #        override: true
-
-  #    - name: Test postgres connection
-  #      run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
-
-  #    - name: Cargo test
-  #      uses: actions-rs/cargo@v1
-  #      with:
-  #        command: test
-  #        args: --verbose
-  #      env:
-  #        POSTGRES_USER: postgres
-  #        POSTGRES_PASSWORD: postgres
 
   build:
     name: Build
