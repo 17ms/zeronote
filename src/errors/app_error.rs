@@ -1,5 +1,6 @@
 use actix_http::StatusCode;
 use actix_web::{HttpResponse, ResponseError};
+use log::debug;
 use oauth2::{basic::BasicErrorResponseType, RequestTokenError, StandardErrorResponse};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -54,6 +55,7 @@ impl ResponseError for AppError {
     }
 
     fn error_response(&self) -> actix_web::HttpResponse<actix_http::body::BoxBody> {
+        debug!(target: "errors_file", "{}", self);
         HttpResponse::build(self.status_code()).json(AppErrorResponse::new(self))
     }
 }
