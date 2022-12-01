@@ -78,9 +78,11 @@ where
                     "Authorization header missing".into(),
                 ))?
                 .to_str()
-                .map_err(AppError::HeaderToStr)?;
+                .map_err(AppError::HeaderToStr)?
+                .split(" ")
+                .collect::<Vec<&str>>()[1]; // Strips prefix from the header
 
-            let _verified = keyset
+            keyset
                 .verify(auth_header, &verifier)
                 .await
                 .map_err(AppError::JWTCognito)?;

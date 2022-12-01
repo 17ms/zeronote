@@ -7,7 +7,7 @@ appenders:
       pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
   rolling_file:
     kind: rolling_file
-    path: "logs/errors.log"
+    path: "logs/output.log"
     encoder:
       pattern: "{d(%Y-%m-%d %H:%M:%S)} | {({l}):5.5} | {f}:{L} — {m}{n}"
     policy:
