@@ -10,7 +10,6 @@ diesel::table! {
 
     tasks (id) {
         id -> Uuid,
-        owner_email -> Varchar,
         title -> Varchar,
         body -> Text,
         condition -> TaskCondition,

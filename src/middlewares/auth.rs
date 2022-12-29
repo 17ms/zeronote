@@ -1,9 +1,10 @@
-use crate::{errors::app_error::AppError, services::auth::CognitoConfig};
+use crate::errors::app_error::AppError;
 use actix_web::{
     dev::{Service, ServiceRequest, ServiceResponse, Transform},
     web, Error,
 };
 use jsonwebtokens_cognito::KeySet;
+use std::env;
 use std::{
     future::{ready, Future, Ready},
     pin::Pin,
@@ -11,6 +12,38 @@ use std::{
 };
 
 // Authorizes the incoming request (for /api endpoints) based on the JWT in Authentication header
+
+#[derive(Debug, Clone)]
+pub struct CognitoConfig {
+    // TODO: remove .env from production
+    pub auth_url: String,
+    pub token_url: String,
+    pub client_id: String,
+    pub client_secret: String,
+    pub keyset_region: String,
+    pub keyset_pool_id: String,
+}
+
+impl Default for CognitoConfig {
+    fn default() -> Self {
+        let cognito_domain = env::var("COGNITO_DOMAIN").expect("COGNITO_DOMAIN must be set");
+        let auth_url = cognito_domain.clone() + "/oauth2/authorize";
+        let token_url = cognito_domain + "/oauth2/token";
+        let client_id = env::var("CLIENT_ID").expect("CLIENT_ID must be set");
+        let client_secret = env::var("CLIENT_SECRET").expect("CLIENT_SECRET must be set");
+        let keyset_pool_id = env::var("KEYSET_POOL_ID").expect("KEYSET_POOL_ID must be set");
+        let keyset_region: String = keyset_pool_id.split("_").next().unwrap().into();
+
+        Self {
+            auth_url,
+            token_url,
+            client_id,
+            client_secret,
+            keyset_region,
+            keyset_pool_id,
+        }
+    }
+}
 
 pub struct Authorization;
 

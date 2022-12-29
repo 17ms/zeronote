@@ -4,26 +4,26 @@ use std::env;
 use zeronote::{
     database::connection::{init_pool, run_migrations},
     errors::app_error::AppError,
-    handlers::{auth::fetch_jwt, tasks::*},
-    middlewares::{auth, cors::cors, security_headers::security_headers},
-    services::auth::CognitoConfig,
+    handlers::tasks::*,
+    middlewares::{
+        auth::{self, CognitoConfig},
+        cors::cors,
+        security_headers::security_headers,
+    },
     utils::{log::init_logger, ssl_builder::create_builder},
 };
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-    let cognito_cfg = CognitoConfig::default();
     let client_origin_url = env::var("CLIENT_ORIGIN_URL").expect("CLIENT_ORIGIN_URL must be set");
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let cognito_cfg = CognitoConfig::default();
+
     let pool = init_pool(database_url);
     let mut conn = pool.get()?;
-    run_migrations(&mut conn);
-
-    // make actix-web HTTPS capable
-    // port_forwarding.sh: :443 => :3000 (for localhost)
     let builder = create_builder()?;
-
+    run_migrations(&mut conn);
     init_logger()?;
 
     HttpServer::new(move || {
@@ -37,7 +37,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(cognito_cfg.clone()))
-            .service(web::scope("/auth").service(fetch_jwt))
             .service(
                 web::scope("/api")
                     .service(create_new_task)

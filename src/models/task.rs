@@ -61,8 +61,7 @@ pub struct NewTask<'a> {
 
 #[derive(Debug, Queryable, AsChangeset, Serialize, Deserialize)]
 pub struct Task {
-    pub id: uuid::Uuid, // requires uuid-ossp extension
-    pub owner_email: String,
+    pub id: uuid::Uuid, // Requires uuid-ossp extension
     pub title: String,
     pub body: String,
     pub condition: TaskCondition,
