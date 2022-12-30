@@ -52,6 +52,7 @@ impl Display for TaskCondition {
 #[derive(Debug, Insertable, Serialize, Deserialize)]
 #[diesel(table_name = tasks)]
 pub struct NewTask<'a> {
+    pub owner_id: &'a str,
     pub title: &'a str,
     pub body: &'a str,
     pub condition: TaskCondition,
@@ -62,6 +63,7 @@ pub struct NewTask<'a> {
 #[derive(Debug, Queryable, AsChangeset, Serialize, Deserialize)]
 pub struct Task {
     pub id: uuid::Uuid, // Requires uuid-ossp extension
+    pub owner_id: String,
     pub title: String,
     pub body: String,
     pub condition: TaskCondition,

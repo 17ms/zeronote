@@ -99,11 +99,11 @@ where
                 .clone()
                 .into_inner();
             let keyset = KeySet::new(config.keyset_region.clone(), config.keyset_pool_id.clone())
-                .map_err(AppError::JWTCognito)?;
+                .map_err(AppError::JwtCognito)?;
             let verifier = keyset
                 .new_access_token_verifier(&[config.client_id.as_str()])
                 .build()
-                .map_err(AppError::JWTGeneric)?;
+                .map_err(AppError::JwtGeneric)?;
             let auth_header = req
                 .headers()
                 .get("Authorization")
@@ -118,7 +118,7 @@ where
             keyset
                 .verify(auth_header, &verifier)
                 .await
-                .map_err(AppError::JWTCognito)?;
+                .map_err(AppError::JwtCognito)?;
 
             let fut = svc.call(req);
             let res = fut.await?;

@@ -5,7 +5,7 @@ use oauth2::{basic::BasicErrorResponseType, RequestTokenError, StandardErrorResp
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-// Wrapper for generic backend errors to convert them to responses
+// Wrapper for generic backend errors to convert them to readable & returnable responses
 
 #[derive(Debug)]
 pub enum AppError {
@@ -22,8 +22,10 @@ pub enum AppError {
         >,
     ),
     Oauth2Parse(oauth2::url::ParseError),
-    JWTGeneric(jsonwebtokens::error::Error),
-    JWTCognito(jsonwebtokens_cognito::Error),
+    JwtGeneric(jsonwebtokens::error::Error),
+    JwtCognito(jsonwebtokens_cognito::Error),
+    JwtParse(jwt::Error),
+    JwtMissingClaim(String),
     HeaderToStr(actix_http::header::ToStrError),
     MissingConfig(String),
     AuthNotFound(String),
@@ -47,8 +49,10 @@ impl ResponseError for AppError {
             Self::JsonPayLoad(_) => StatusCode::BAD_REQUEST,
             Self::OAuth2Token(_) => StatusCode::UNAUTHORIZED,
             Self::Oauth2Parse(_) => StatusCode::UNAUTHORIZED,
-            Self::JWTGeneric(_) => StatusCode::UNAUTHORIZED,
-            Self::JWTCognito(_) => StatusCode::UNAUTHORIZED,
+            Self::JwtGeneric(_) => StatusCode::UNAUTHORIZED,
+            Self::JwtCognito(_) => StatusCode::UNAUTHORIZED,
+            Self::JwtParse(_) => StatusCode::UNAUTHORIZED,
+            Self::JwtMissingClaim(_) => StatusCode::UNAUTHORIZED,
             Self::HeaderToStr(_) => StatusCode::UNAUTHORIZED,
             Self::AuthNotFound(_) => StatusCode::UNAUTHORIZED,
         }
@@ -84,8 +88,10 @@ impl AppErrorResponse {
             AppError::JsonPayLoad(_) => ("400".into(), "Invalid JSON payload".into()),
             AppError::OAuth2Token(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::Oauth2Parse(_) => ("401".into(), "Invalid JWT token".into()),
-            AppError::JWTGeneric(_) => ("401".into(), "Invalid JWT token".into()),
-            AppError::JWTCognito(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JwtGeneric(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JwtCognito(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JwtParse(_) => ("401".into(), "Invalid JWT token".into()),
+            AppError::JwtMissingClaim(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::HeaderToStr(_) => ("401".into(), "Invalid JWT token".into()),
             AppError::AuthNotFound(s) => ("401".into(), s.into()),
         };
