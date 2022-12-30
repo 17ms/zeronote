@@ -30,6 +30,19 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout sources
@@ -42,11 +55,26 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: Test postgres connection
+        run: psql postgres://postgres:postgres@localhost:5432/postgres -c 'SELECT 1;'
+
       - name: Cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
           args: --verbose
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          COGNITO_DOMAIN: ${{ secrets.COGNITO_DOMAIN }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          KEYSET_POOL_ID: ${{ secrets.KEYSET_POOL_ID }}
+          OAUTH_USERNAME: ${{ secrets.OAUTH_USERNAME }}
+          OAUTH_PASSWORD: ${{ secrets.OAUTH_PASSWORD }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
   build:
     name: Build
