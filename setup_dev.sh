@@ -13,7 +13,7 @@ setup_ssl_cert () {
         -subj "/C=US/ST=Oregon/L=Portland/O=Company Name/OU=Org/CN=www.example.com"
 }
 
-# Port forwarding from localhost:3000 to localhost443 allows HTTPS without sudo privileges
+# Port forwarding from :3000 to :443 allows HTTPS without sudo privileges (generally only for linux)
 setup_forwarding () {
     sudo iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 3000
 }

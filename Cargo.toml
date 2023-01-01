@@ -1,7 +1,7 @@
 [package]
 name = "zeronote"
-description = "Lightweight REST API with Actix Web"
-version = "0.1.0"
+description = "Actix Web REST API with JWT authentication "
+version = "0.2.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
