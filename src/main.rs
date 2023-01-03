@@ -13,14 +13,32 @@ use zeronote::{
     utils::{log::init_logger, ssl_builder::create_builder},
 };
 
+fn parse_env() -> (String, String) {
+    dotenv().ok();
+
+    let cors_url = env::var("CLIENT_ORIGIN_URL").expect("DATABASE_URL must be set");
+
+    let db_user = env::var("POSTGRES_USER").expect("POSTGRES_USER must be set");
+    let db_pass = env::var("POSTGRES_PASSWORD").expect("POSTGRES_PASSWORD must be set");
+    let db_host = env::var("POSTGRES_HOST").expect("POSTGRES_HOST must be set");
+    let db_port = env::var("POSTGRES_PORT").expect("POSTGRES_PORT must be set");
+    let db_name = env::var("POSTGRES_DB").expect("POSTGRES_DB must be set");
+
+    (
+        cors_url,
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            db_user, db_pass, db_host, db_port, db_name
+        ),
+    )
+}
+
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
-    let client_origin_url = env::var("CLIENT_ORIGIN_URL").expect("CLIENT_ORIGIN_URL must be set");
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let (cors_url, db_url) = parse_env();
     let cognito_cfg = CognitoConfig::default();
 
-    let pool = init_pool(database_url);
+    let pool = init_pool(db_url);
     let mut conn = pool.get()?;
     let builder = create_builder()?;
     run_migrations(&mut conn);
@@ -29,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
-            .wrap(cors(&client_origin_url))
+            .wrap(cors(&cors_url))
             .wrap(security_headers())
             .app_data(
                 web::JsonConfig::default()
@@ -47,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .default_service(web::to(|| HttpResponse::NotFound()))
     })
-    .bind_openssl("0.0.0.0:3000", builder)?
+    .bind_openssl("0.0.0.0:443", builder)?
     .run()
     .await?;
 
