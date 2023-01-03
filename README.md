@@ -37,4 +37,4 @@ cargo build --release
 ./target/release/zeronote
 ```
 
-The API will be listening to `localhost:3000` by default. A separate Dockerfile will be added in the future.
+The API will be listening to `https://localhost` by default. A separate Dockerfile will be added in the future.
