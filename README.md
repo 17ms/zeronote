@@ -8,17 +8,7 @@
 
 ## Authentication & authorization flow
 
-![A visualization of the OAuth2 authentication & authorization flow](./docs/oauth-flow.svg)
-
-1. Client makes a request to a protected API endpoint.
-2. API returns a 401 response if the request sent by the client doesn't contain a valid JWT encoded access token.
-3. Client checks whether it has a valid refresh token to obtain a new access token from the tenant.
-4. If no valid refresh or access tokens are found, the client sends authorization request to tenant's `/oauth2/authorize` endpoint.
-5. Tenant redirects the request to a login UI where the user logs in or signs up.
-6. Tenant redirects user back to the client with a one-time authorization `code`.
-7. Client sends a token request containing the `code` to tenant's `/oauth2/token` endpoint.
-8. After doing the PKCE checks the tenant returns a new JWT.
-9. Client makes a new request with the valid access token to the protected API endpoint.
+![A visualization of the OAuth2 authentication & authorization flow](./.github/docs/oauth-flow.svg)
 
 ## Setup
 
